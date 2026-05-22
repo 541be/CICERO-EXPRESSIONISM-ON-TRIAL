@@ -41,3 +41,13 @@
  :ai-result
  (fn [db]
    (:ai-result db)))
+
+(rf/reg-sub
+ :api-backend
+ (fn [db]
+   (:api-backend db)))
+
+(rf/reg-sub
+ :gemini-api-key
+ (fn [db]
+   (:gemini-api-key db)))

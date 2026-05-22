@@ -232,3 +232,45 @@ body {
   padding: 40px;
   overflow-y: auto;
 }
+
+.settings-scene {
+  background: var(--parchment-bg);
+  color: var(--parchment-text);
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-form {
+  background: rgba(0,0,0,0.1);
+  padding: 30px;
+  border: 4px solid #000;
+  margin: 20px 0;
+  width: 80%;
+  max-width: 500px;
+}
+
+.settings-input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  font-family: var(--font-main);
+  font-size: 1.2rem;
+  border: 2px solid #000;
+  background: #fff;
+}
+
+.settings-note {
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+  margin-top: -5px;
+  margin-bottom: 20px;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 20px;
+}

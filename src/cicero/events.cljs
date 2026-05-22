@@ -7,12 +7,26 @@
 (rf/reg-event-db
  :initialize-db
  (fn [_ _]
-   db/default-db))
+   (let [saved-backend (.getItem js/window.localStorage "cicero-api-backend")
+         saved-key (.getItem js/window.localStorage "cicero-gemini-key")
+         db (-> db/default-db
+                (assoc :api-backend (if saved-backend (keyword saved-backend) :ollama))
+                (assoc :gemini-api-key (or saved-key "")))]
+     db)))
 
 (rf/reg-event-db
  :set-scene
  (fn [db [_ scene]]
    (assoc db :scene scene)))
+
+(rf/reg-event-db
+ :save-settings
+ (fn [db [_ backend api-key]]
+   (.setItem js/window.localStorage "cicero-api-backend" (name backend))
+   (.setItem js/window.localStorage "cicero-gemini-key" api-key)
+   (-> db
+       (assoc :api-backend backend)
+       (assoc :gemini-api-key api-key))))
 
 (rf/reg-event-db
  :update-player-text
@@ -48,9 +62,11 @@
 
 (rf/reg-event-fx
  :fetch-ai-evaluation
- (fn [_ [_ player-text cicero-text]]
+ (fn [{:keys [db]} [_ player-text cicero-text]]
    {:ai/evaluate {:player-text player-text
                   :cicero-text cicero-text
+                  :backend (:api-backend db)
+                  :api-key (:gemini-api-key db)
                   :on-success [:ai-evaluation-success]
                   :on-failure [:ai-evaluation-failure]}}))
 

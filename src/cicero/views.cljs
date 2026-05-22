@@ -9,7 +9,8 @@
   [:div.scene.main-menu
    [:h1.title "CICERO: EXPRESSIONISM ON TRIAL"]
    [:button.menu-btn {:on-click #(rf/dispatch [:set-scene :trial])} "Start Trial"]
-   [:button.menu-btn {:on-click #(rf/dispatch [:set-scene :encyclopedia])} "Expressionism Encyclopedia"]])
+   [:button.menu-btn {:on-click #(rf/dispatch [:set-scene :encyclopedia])} "Expressionism Encyclopedia"]
+   [:button.menu-btn {:on-click #(rf/dispatch [:set-scene :settings])} "Settings"]])
 
 (defn trial-scene []
   (let [cicero-text @(rf/subscribe [:cicero-text])
@@ -55,6 +56,33 @@
    [:p "Unlock entries explaining metaphor, fragmentation, apocalypse imagery..."]
    [:button.menu-btn {:on-click #(rf/dispatch [:set-scene :main-menu])} "Back"]])
 
+(defn settings-scene []
+  (r/with-let [local-backend (r/atom @(rf/subscribe [:api-backend]))
+               local-key (r/atom @(rf/subscribe [:gemini-api-key]))]
+    [:div.scene.settings-scene
+     [:h1 "Settings & AI Configuration"]
+     [:div.settings-form
+      [:label "AI Backend: "]
+      [:select.settings-input {:value (name @local-backend)
+                               :on-change #(reset! local-backend (keyword (-> % .-target .-value)))}
+       [:option {:value "ollama"} "Local Ollama (gemma4:26b)"]
+       [:option {:value "gemini"} "Gemini (3.1 Flash-Lite)"]]
+      
+      (when (= @local-backend :gemini)
+        [:div.gemini-config
+         [:label "Gemini API Key: "]
+         [:input.settings-input {:type "password"
+                                 :value @local-key
+                                 :on-change #(reset! local-key (-> % .-target .-value))
+                                 :placeholder "AIzaSy..."}]
+         [:p.settings-note "Your key is saved locally in your browser and never sent to our servers."]])]
+         
+     [:div.settings-actions
+      [:button.submit-btn {:on-click #(do 
+                                        (rf/dispatch [:save-settings @local-backend @local-key])
+                                        (rf/dispatch [:set-scene :main-menu]))} "Save & Return"]
+      [:button.menu-btn {:on-click #(rf/dispatch [:set-scene :main-menu])} "Cancel"]]]))
+
 (defn main-panel []
   (let [scene @(rf/subscribe [:scene])]
     [:div#app-container
@@ -62,4 +90,5 @@
        :main-menu [main-menu]
        :trial [trial-scene]
        :encyclopedia [encyclopedia-scene]
+       :settings [settings-scene]
        [main-menu])]))

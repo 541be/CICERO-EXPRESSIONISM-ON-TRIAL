@@ -7,7 +7,7 @@
    4 "THE FURY OF CICERO: Quod si aut causa criminis aut facti suspicio aut quaelibet denique vel minima res reperietur, quam ob rem videantur illi non nihil tamen in deferendo nomine secuti... non recusamus, quin illorum libidini Sex. Rosci vita dedatur!"})
 
 (def default-db
-  {:scene :main-menu ; :main-menu, :trial, :encyclopedia
+  {:scene :main-menu ; :main-menu, :trial, :encyclopedia, :settings
    :level 1
    :score 0
    :k-marks 0
@@ -15,4 +15,6 @@
    :player-text ""
    :ai-evaluating? false
    :ai-result nil ; {:score 0-100, :explanation "..."}
+   :api-backend :ollama ; :ollama or :gemini
+   :gemini-api-key ""
    })

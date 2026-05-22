@@ -18,3 +18,5 @@ public/js/
 .Trashes
 ehthumbs.db
 Thumbs.db
+/.clj-kondo
+/.lsp
