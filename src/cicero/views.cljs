@@ -35,7 +35,7 @@
         
      [:div.character-panel
       [:div.speech-bubble cicero-text]
-      [:img.cicero-img {:src "/images/IMG_5657.PNG" :alt "Cicero"}]]
+      [:img.cicero-img {:src "images/IMG_5657.PNG" :alt "Cicero"}]]
       
      [:div.player-panel
       [:textarea.speech-input
