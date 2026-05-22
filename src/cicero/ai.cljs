@@ -3,6 +3,60 @@
    [re-frame.core :as rf]
    [clojure.string :as str]))
 
+(defn- js-array? [x]
+  (and (some? x) (array? x)))
+
+(defn- js-object-values [obj]
+  (when (and (some? obj) (object? obj))
+    (array-seq (js/Object.values obj) 0)))
+
+(defn- deep-first-string [value]
+  (cond
+    (string? value)
+    (when-not (str/blank? value)
+      value)
+
+    (js-array? value)
+    (some deep-first-string (array-seq value 0))
+
+    (object? value)
+    (some deep-first-string (js-object-values value))
+
+    :else
+    nil))
+
+(defn- extract-gemini-text [data]
+  (or
+    (some-> data .-candidates (aget 0) deep-first-string)
+    (some-> data .-results (aget 0) deep-first-string)
+    (some-> data .-output deep-first-string)
+    (some-> data .-outputText deep-first-string)
+    (some-> data .-text deep-first-string)
+    (some-> data .-content deep-first-string)
+    (deep-first-string data)))
+
+(defn- parse-gemini-response [data]
+  (let [raw (extract-gemini-text data)]
+    (cond
+      (and raw (not (string? raw))) raw
+      (string? raw)
+      (try
+        (js/JSON.parse raw)
+        (catch :default _
+          (let [cleaned (-> raw
+                            (str/replace #"(?si)^```json\s*" "")
+                            (str/replace #"(?si)\s*```$" ""))]
+            (try
+              (js/JSON.parse cleaned)
+              (catch :default _
+                #js {"score" 0
+                     "explanation" "Gemini's mind fractured. (JSON Parse Error)"})))))
+      :else
+      (do
+        (js/console.warn "Gemini returned an unexpected payload:" data)
+        #js {"score" 0
+             "explanation" "Gemini returned an unexpected response."}))))
+
 ;; Use standard js/fetch to call local ollama
 (rf/reg-fx
  :ai/evaluate
@@ -49,18 +103,7 @@
                           (.json response)
                           (throw (js/Error. (str "Gemini HTTP Error: " (.-statusText response)))))))
                (.then (fn [data]
-                        (let [response-text (-> data .-candidates (aget 0) .-content .-parts (aget 0) .-text)
-                              parsed (try
-                                       (js/JSON.parse response-text)
-                                       (catch :default e
-                                         (let [cleaned (-> response-text
-                                                           (str/replace #"(?si)^```json\s*" "")
-                                                           (str/replace #"(?si)\s*```$" ""))]
-                                           (try
-                                             (js/JSON.parse cleaned)
-                                             (catch :default e2
-                                               #js {"score" 0
-                                                    "explanation" "Gemini's mind fractured. (JSON Parse Error)"})))))]
+                        (let [parsed (parse-gemini-response data)]
                           (rf/dispatch (conj on-success (js->clj parsed))))))
                (.catch (fn [error]
                          (js/clearTimeout timeout-id)
@@ -91,13 +134,13 @@
                       (let [response-text (.-response data)
                             parsed (try
                                      (js/JSON.parse response-text)
-                                     (catch :default e
+                                     (catch :default _
                                        (let [cleaned (-> response-text
                                                          (str/replace #"(?si)^```json\s*" "")
                                                          (str/replace #"(?si)\s*```$" ""))]
                                          (try
                                            (js/JSON.parse cleaned)
-                                           (catch :default e2
+                                           (catch :default _
                                              #js {"score" 0
                                                   "explanation" "The Consilium's mind fractured. (JSON Parse Error)"})))))]
                         (rf/dispatch (conj on-success (js->clj parsed))))))
