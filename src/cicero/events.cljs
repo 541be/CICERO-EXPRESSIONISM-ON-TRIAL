@@ -20,6 +20,32 @@
    (assoc db :scene scene)))
 
 (rf/reg-event-db
+ :start-game
+ (fn [db _]
+   (-> db
+       (assoc :scene :trial)
+       (assoc :level 1)
+       (assoc :score 0)
+       (assoc :k-marks 0)
+       (assoc :cicero-text (get db/levels 1))
+       (assoc :player-text "")
+       (assoc :ai-result nil)
+       (assoc :ai-evaluating? false))))
+
+(rf/reg-event-db
+ :quit-game
+ (fn [db _]
+   (-> db
+       (assoc :scene :main-menu)
+       (assoc :level 1)
+       (assoc :score 0)
+       (assoc :k-marks 0)
+       (assoc :cicero-text (get db/levels 1))
+       (assoc :player-text "")
+       (assoc :ai-result nil)
+       (assoc :ai-evaluating? false))))
+
+(rf/reg-event-db
  :save-settings
  (fn [db [_ backend api-key]]
    (.setItem js/window.localStorage "cicero-api-backend" (name backend))
@@ -41,6 +67,8 @@
        (-> db
            (assoc :scene :main-menu)
            (assoc :level 1)
+           (assoc :score 0)
+           (assoc :k-marks 0)
            (assoc :cicero-text (get db/levels 1))
            (assoc :player-text "")
            (assoc :ai-result nil)
